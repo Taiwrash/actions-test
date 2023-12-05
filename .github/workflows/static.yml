@@ -1,5 +1,5 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Simple workflow for deploying static content to GitHub Pages (test) and Vercel (prod)
+name: Deploy to Environments
 
 on:
   # Runs on pushes targeting the default branch
@@ -22,11 +22,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
+  # Test environment: Deploy to GitHub Pages
+  deploy_to_github_pages:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}/src
+      url: ${{ steps.deployment.outputs.page_url }}src
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,3 +41,23 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3
+
+  # Production environment: Deploy to Vercel
+  deploy_to_vercel:
+    environment:
+      name: vercel-prod
+      url: ${{ steps.vercel.outputs.zeit_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      - name: Login to Vercel
+        run: vercel login -t ${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy to Vercel
+        run: vercel --prod
